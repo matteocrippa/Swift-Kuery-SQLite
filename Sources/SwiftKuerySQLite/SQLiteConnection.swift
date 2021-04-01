@@ -143,45 +143,32 @@ public class SQLiteConnection: Connection {
     
     public func encrypt(key: String, onCompletion: @escaping (QueryResult) -> ()) {
         DispatchQueue.global().async {
-            let resultCode = sqlite3_key(self.connection, key, Int32(key.utf8CString.count))
+            var resultCode = sqlite3_key(self.connection, key, Int32(key.utf8CString.count))
             if resultCode != SQLITE_OK {
                 let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
                 self.connection = nil
                 return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
             }
             
-            self.prepareStatement("PRAGMA cipher_version;") { result in
-                guard let pragmaStatement = result.asPreparedStatement else { return }
-                
-                self.execute(preparedStatement: pragmaStatement) { success in
-                    if success.asError != nil {
-                        let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
-                        self.connection = nil
-                        return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
-                    }
-                    // Set the busy timeout to 200 milliseconds.
-                    sqlite3_busy_timeout(self.connection, 200)
-                    return self.runCompletionHandler(.successNoData, onCompletion: onCompletion)
-                }
+            var stmt: OpaquePointer? = nil
+            resultCode = sqlite3_prepare_v2(self.connection, "PRAGMA cipher_version;", -1, &stmt, nil)
+            if resultCode != SQLITE_OK {
+                let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
+                self.connection = nil
+                return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
             }
+
+            resultCode = sqlite3_step(stmt)
+            if resultCode != SQLITE_ROW {
+                let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
+                self.connection = nil
+                return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
+            }
+            sqlite3_finalize(stmt)
             
-//            var stmt: OpaquePointer? = nil
-//            resultCode = sqlite3_prepare_v2(self.connection, "PRAGMA cipher_version;", -1, &stmt, nil)
-//            if resultCode != SQLITE_OK {
-//                let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
-//                self.connection = nil
-//                return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
-//            }
-//
-//            resultCode = sqlite3_step(stmt)
-//            if resultCode != SQLITE_ROW {
-//                let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
-//                self.connection = nil
-//                return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
-//            }
-//            sqlite3_finalize(stmt)
-//
-//
+            // Set the busy timeout to 200 milliseconds.
+            sqlite3_busy_timeout(self.connection, 200)
+            return self.runCompletionHandler(.successNoData, onCompletion: onCompletion)
         }
     }
 
