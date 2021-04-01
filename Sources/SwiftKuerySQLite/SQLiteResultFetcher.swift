@@ -15,11 +15,7 @@
  */
 
 import SwiftKuery
-#if os(Linux)
-    import CSQLiteLinux
-#else
-    import CSQLiteDarwin
-#endif
+import SQLCipher
 import Foundation
 import Dispatch
 
