@@ -143,8 +143,8 @@ public class SQLiteConnection: Connection {
     
     public func encrypt(key: String, onCompletion: @escaping (QueryResult) -> ()) {
         DispatchQueue.global().async {
-            sqlite3_key(self.connection, key, Int32(key.utf8CString.count))
-            var resultCode = sqlite3_exec(self.connection, "SELECT count(*) FROM sqlite_master;", nil, nil, nil)
+            var resultCode = sqlite3_key(self.connection, key, Int32(key.utf8CString.count))
+            // var resultCode = sqlite3_exec(self.connection, "SELECT count(*) FROM sqlite_master;", nil, nil, nil)
             if resultCode != SQLITE_OK {
                 let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
                 self.connection = nil
