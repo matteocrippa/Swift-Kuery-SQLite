@@ -140,6 +140,12 @@ public class SQLiteConnection: Connection {
             return self.runCompletionHandler(.successNoData, onCompletion: onCompletion)
         }
     }
+    
+    public func encrypt(key: String) {
+        DispatchQueue.global().async {
+            sqlite3_key(self.connection, key, Int32(key.utf8CString.count))
+        }
+    }
 
     /// Establish a connection with the database.
     ///

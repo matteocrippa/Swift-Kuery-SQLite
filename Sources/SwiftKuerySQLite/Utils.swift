@@ -14,11 +14,7 @@
  limitations under the License.
  */
 
-#if os(Linux)
-    import CSQLiteLinux
-#else
-    import CSQLiteDarwin
-#endif
+import SQLCipher
 
 struct Utils {
     static func clear(statement: OpaquePointer, finalize: Bool) {

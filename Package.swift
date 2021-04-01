@@ -29,7 +29,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/Kitura/Swift-Kuery.git", from: "3.0.200"),
-        .package(url: "https://github.com/matteocrippa/SQLCipher.git", from: "0.0.4")
+        .package(url: "https://github.com/matteocrippa/SQLCipher.git", .upToNextMajor(from: "0.0.4"))
         //.package(url: "https://github.com/Kitura/Swift-Kuery.git", .branch("master")),
     ],
     targets: [
