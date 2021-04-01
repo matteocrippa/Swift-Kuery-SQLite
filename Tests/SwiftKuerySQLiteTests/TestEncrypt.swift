@@ -20,9 +20,6 @@ class TestEncrypt: XCTestCase {
     }
     
     func testEncryption() {
-        encrypt { db in
-            XCTAssertNotNil(db)
-            XCTAssertTrue(db?.isConnected ?? false)
-        }
+        XCTAssertEqual(encrypt(), true)
     }
 }

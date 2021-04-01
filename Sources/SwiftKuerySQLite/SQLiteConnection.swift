@@ -171,6 +171,20 @@ public class SQLiteConnection: Connection {
             return self.runCompletionHandler(.successNoData, onCompletion: onCompletion)
         }
     }
+    
+    public func encryptSync(key: String) -> Bool {
+        var result: QueryResult? = nil
+        let semaphore = DispatchSemaphore(value: 0)
+        encrypt(key: key) { res in
+            result = res
+            semaphore.signal()
+        }
+        semaphore.wait()
+        guard let resultUnwrapped = result else {
+            return false
+        }
+        return true
+    }
 
     /// Establish a connection with the database.
     ///

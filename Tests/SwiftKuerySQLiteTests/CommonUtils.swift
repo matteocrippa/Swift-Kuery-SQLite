@@ -140,18 +140,10 @@ private func printResultAndGetRowsAsArray(_ result: QueryResult, callback: @esca
     }
 }
 
-func encrypt(key: String = "AS798d6sa87d69as7yd987sadsa", callback: @escaping (SQLiteConnection?) -> ()) {
+func encrypt(key: String = "AS798d6sa87d69as7yd987sadsa") -> Bool {
     let db = SQLiteConnection(filename: "testDbEncrypt.db")
     _ = db.connectSync()
-    db.encrypt(key: key) { result in
-        switch result {
-        case .error(let error):
-            print(error)
-            callback(nil)
-        default:
-            callback(db)
-        }
-    }
+    return db.encryptSync(key: key)
 }
 
 
