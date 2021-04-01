@@ -144,16 +144,29 @@ public class SQLiteConnection: Connection {
     public func encrypt(key: String, onCompletion: @escaping (QueryResult) -> ()) {
         DispatchQueue.global().async {
             sqlite3_key(self.connection, key, Int32(key.utf8CString.count))
-            if  sqlite3_exec(self.connection,"SELECT count(*) FROM sqlite_master;", nil, nil, nil) == SQLITE_OK {
-                var stmt: OpaquePointer? = nil
-                if sqlite3_prepare_v2(self.connection, "PRAGMA cipher_version;", -1, &stmt, nil) == SQLITE_OK {
-                    if sqlite3_step(stmt) == SQLITE_ROW {
-                       let ver = sqlite3_column_text(stmt, 0);
-                        print(ver ?? "")
-                    }
-                    sqlite3_finalize(stmt);
-                }
+            var resultCode = sqlite3_exec(self.connection, "SELECT count(*) FROM sqlite_master;", nil, nil, nil)
+            if resultCode != SQLITE_OK {
+                let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
+                self.connection = nil
+                return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
             }
+            
+            var stmt: OpaquePointer? = nil
+            resultCode = sqlite3_prepare_v2(self.connection, "PRAGMA cipher_version;", -1, &stmt, nil)
+            if resultCode != SQLITE_OK {
+                let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
+                self.connection = nil
+                return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
+            }
+            
+            resultCode = sqlite3_step(stmt)
+            if resultCode != SQLITE_ROW {
+                let error: String? = String(validatingUTF8: sqlite3_errmsg(self.connection))
+                self.connection = nil
+                return self.runCompletionHandler(.error(QueryError.connection(error!)), onCompletion: onCompletion)
+            }
+            sqlite3_finalize(stmt);
+
             // Set the busy timeout to 200 milliseconds.
             sqlite3_busy_timeout(self.connection, 200)
             return self.runCompletionHandler(.successNoData, onCompletion: onCompletion)
