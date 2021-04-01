@@ -141,7 +141,7 @@ public class SQLiteConnection: Connection {
         }
     }
     
-    public func encrypt(key: String) {
+    public func encrypt(key: String, onCompletion: @escaping (QueryResult) -> ()) {
         DispatchQueue.global().async {
             sqlite3_key(self.connection, key, Int32(key.utf8CString.count))
             if  sqlite3_exec(self.connection,"SELECT count(*) FROM sqlite_master;", nil, nil, nil) == SQLITE_OK {
@@ -154,6 +154,9 @@ public class SQLiteConnection: Connection {
                     sqlite3_finalize(stmt);
                 }
             }
+            // Set the busy timeout to 200 milliseconds.
+            sqlite3_busy_timeout(self.connection, 200)
+            return self.runCompletionHandler(.successNoData, onCompletion: onCompletion)
         }
     }
 
